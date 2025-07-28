@@ -1,0 +1,2 @@
+GetFat is a solo Jack-based computer game that tests reaction time and strategy. Players control a circle using arrow keys, avoiding flying squares while collecting smaller circles for points. As the circle grows with each point, avoiding obstacles becomes harder, and increasing levels bring faster flying objects, escalating the challenge.
+See Demo here: https://drive.google.com/file/d/1JbLNV4qjcYIMfjGGdbDrXLCKRFc1nZ6g/view
