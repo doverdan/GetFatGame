@@ -1,0 +1,197 @@
+class FlyingObject {
+
+    field int x, y;
+    field int size;
+    field int speed;
+    field boolean isGood; // good => circle, bad => rectangle
+    field boolean active; // becomes false if off-screen
+
+    // same constructor as before
+    constructor FlyingObject new(int startX, int startY, int asize, int aspeed, boolean goodOrBad) {
+        let x = startX;
+        let y = startY;
+        let size = asize;
+        let speed = aspeed;
+        let isGood = goodOrBad;
+        let active = true;
+        do draw();
+        return this;
+    }
+
+    method void dispose() {
+        do erase();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void setSpeed(int newSpeed) {
+        let speed = newSpeed;
+        return;
+    }
+
+    /**
+     * Draw the object:
+     *  - Good => drawCircle()
+     *  - Bad => drawRectangle()
+     * We clamp coordinates to avoid "Illegal rectangle coordinates."
+     */
+    method void draw() {
+        var int r;
+        var int left, right, top, bottom;
+        var int newCenterX, newCenterY, newR;
+
+        if (~active) {
+            return; // skip if not active
+        }
+
+        if (isGood) {
+            // =========== Circle (Good) ===========
+            let r = Math.divide(size, 2); // radius
+            if (r > 181) {
+                let r = 181; // clamp radius for drawCircle
+            }
+
+            let left = x;
+            let right = x + (2 * r);
+            let top = y;
+            let bottom = y + (2 * r);
+
+            // Clamp
+            if (left < 0) { let left = 0; }
+            if (right > 511) { let right = 511; }
+            if (top < 0) { let top = 0; }
+            if (bottom > 255) { let bottom = 255; }
+
+            if ((left < right) & (top < bottom)) {
+                let newCenterX = Math.divide(left + right, 2);
+                let newCenterY = Math.divide(top + bottom, 2);
+                let newR = Math.divide(right - left, 2);
+                if (newR > 181) {
+                    let newR = 181;
+                }
+                if (newR > 0) {
+                    do Screen.setColor(true);
+                    do Screen.drawCircle(newCenterX, newCenterY, newR);
+                }
+            }
+        } else {
+            // =========== Rectangle (Bad) ===========
+            let left = x;
+            let right = x + size;
+            let top = y;
+            let bottom = y + size;
+
+            if (left < 0) { let left = 0; }
+            if (right > 511) { let right = 511; }
+            if (top < 0) { let top = 0; }
+            if (bottom > 255) { let bottom = 255; }
+
+            if ((left < right) & (top < bottom)) {
+                do Screen.setColor(true);
+                do Screen.drawRectangle(left, top, right, bottom);
+            }
+        }
+        return;
+    }
+
+    /**
+     * Erase by drawing in white. (Circle or rectangle)
+     */
+    method void erase() {
+        var int r;
+        var int left, right, top, bottom;
+        var int newCenterX, newCenterY, newR;
+
+        if (~active) {
+            return;
+        }
+
+        if (isGood) {
+            // Erase circle
+            let r = Math.divide(size, 2);
+            if (r > 181) {
+                let r = 181;
+            }
+            let left = x;
+            let right = x + (2 * r);
+            let top = y;
+            let bottom = y + (2 * r);
+
+            if (left < 0) { let left = 0; }
+            if (right > 511) { let right = 511; }
+            if (top < 0) { let top = 0; }
+            if (bottom > 255) { let bottom = 255; }
+
+            if ((left < right) & (top < bottom)) {
+                let newCenterX = Math.divide(left + right, 2);
+                let newCenterY = Math.divide(top + bottom, 2);
+                let newR = Math.divide(right - left, 2);
+                if (newR > 181) {
+                    let newR = 181;
+                }
+                if (newR > 0) {
+                    do Screen.setColor(false);
+                    do Screen.drawCircle(newCenterX, newCenterY, newR);
+                }
+            }
+        } else {
+            // Erase rectangle
+            let left = x;
+            let right = x + size;
+            let top = y;
+            let bottom = y + size;
+
+            if (left < 0) { let left = 0; }
+            if (right > 511) { let right = 511; }
+            if (top < 0) { let top = 0; }
+            if (bottom > 255) { let bottom = 255; }
+
+            if ((left < right) & (top < bottom)) {
+                do Screen.setColor(false);
+                do Screen.drawRectangle(left, top, right, bottom);
+            }
+        }
+        return;
+    }
+
+    /**
+     * Moves left by 'speed'. If fully off-screen, set active=false.
+     */
+    method void update() {
+        if (active) {
+            do erase();
+            let x = x - speed;
+            if ((x + size) < 0) {
+                let active = false;
+            } else {
+                do draw();
+            }
+        }
+        return;
+    }
+
+    // Accessors
+    method boolean isActive() {
+        return active;
+    }
+
+    method boolean isGoodObject() {
+        return isGood;
+    }
+
+    method int getX() {
+        return x;
+    }
+
+    method int getY() {
+        return y;
+    }
+
+    method int getSize() {
+        return size;
+    }
+
+    method int getSpeed() {
+        return speed;
+    }
+}

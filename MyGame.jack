@@ -1,0 +1,310 @@
+class MyGame {
+    static int highScore;
+
+    field PlayerCircle player;
+    field Array objects;
+    field int objectCount;
+    field int score;
+    field boolean gameOver;
+    field int frameCount;  
+    field int spawnRate;
+    field int speed;
+    field int level;
+
+    function void startGame() {
+        var MyGame game;
+        var boolean playAgain;
+        
+        let playAgain = true;
+        
+        while (playAgain) {
+            //Display the Starting Screen 
+            do Startscreen.go();
+            do Screen.clearScreen();
+            
+            let game = MyGame.new();
+            do game.run();
+            let playAgain = Endscreen.showEndScreen(game.getScore(), game.gethighScore());
+            do game.dispose();
+            
+            do Screen.clearScreen();
+        }
+        return;
+    }
+
+     // Initializes a new game with starting values and creates the player
+    constructor MyGame new() {
+        var int i;
+        
+        let player = PlayerCircle.new(250, 100, 20);
+        let objects = Array.new(25);
+        let objectCount = 0;
+        let score = 0;
+        let gameOver = false;
+        let frameCount = 0;
+        let spawnRate = 35;  
+        let speed = 6;     
+        let level = 1;
+
+        let i = 0;
+        while (i < 25) {
+            let objects[i] = null;
+            let i = i + 1;
+        }
+
+        do displayScores();
+        return this;
+    }
+
+    // Cleans up game resources and frees memory
+    method void dispose() {
+        var int i;
+        var FlyingObject temp;
+        
+        let i = 0;
+        while (i < 25) {
+            let temp = objects[i];
+            if (~(temp = null)) {
+                do temp.dispose();
+            }
+            let i = i + 1;
+        }
+        
+        if (~(player = null)) {
+            do player.dispose();
+        }
+        
+        do objects.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    // Main game loop that handles input, updates, and collision checks
+    method void run() {
+        while (~gameOver) {
+            if (~(checkInput())) {
+                let gameOver = true;
+                return;
+            }
+
+            if ((spawnRate > 0) & (frameCount < 32000)) {
+                if (Math.multiply(Math.divide(frameCount, spawnRate), spawnRate) = frameCount) {
+                    do spawnRandomObject();
+                }
+            }
+
+            do updateObjects();
+            do checkCollisions();
+
+            if (speed < 1) {
+                do Sys.wait(2);
+            } else {
+                do Sys.wait(speed);
+            }
+
+            let frameCount = frameCount + 1;
+            if (frameCount > 32000) {
+                let frameCount = 0;
+            }
+        }
+        return;
+    }
+
+    // Returns the current game score
+    method int getScore() {
+        return score;
+    }
+
+    method int gethighScore() {
+        return highScore;
+    }
+
+    // Handles keyboard input for movement and quit command
+    method boolean checkInput() {
+        var char key;
+        let key = Keyboard.keyPressed();
+        if (key = 81) {  // 'q'
+            return false;
+        }
+        if (key = 131) { do player.moveUp(); }
+        if (key = 133) { do player.moveDown(); }
+        if (key = 130) { do player.moveLeft(); }
+        if (key = 132) { do player.moveRight(); }
+        return true;
+    }
+
+    // Creates a new flying object with random properties and adds it to the game
+    method void spawnRandomObject() {
+        var int sp;
+        var int base;
+        var int randVal, randY;
+        var boolean isGood;
+        var FlyingObject newObj;
+
+        if ((objectCount < 25) & (objectCount > -1)) {
+            let randVal = Random.random(2);
+            if (randVal = 0) {
+                let isGood = false;
+                // Bad objects start faster
+                let sp = Random.random(2) + 4;  // Base speed [4..6]
+            } else {
+                let isGood = true;
+                let sp = Random.random(2) + 2;  // Base speed [2..4]
+            }
+
+            let randY = Random.random(200);
+            let base = Random.random(11);
+            let base = base + 5;
+
+            // Add level bonus
+            let sp = sp + (level - 1);
+
+            if (sp > 10) { let sp = 10; }  // Speed cap
+            if (sp < 1) { let sp = 1; }    // Minimum speed
+
+            let newObj = FlyingObject.new(510, randY, base, sp, isGood);
+            if (~(newObj = null)) {
+                let objects[objectCount] = newObj;
+                let objectCount = objectCount + 1;
+            }
+        }
+        return;
+    }
+
+    // Updates positions of all flying objects and removes inactive ones
+    method void updateObjects() {
+        var int i;
+        var FlyingObject temp;
+        
+        if (objectCount < 0) { let objectCount = 0; }
+        if (objectCount > 25) { let objectCount = 25; }
+        
+        let i = 0;
+        while ((i < objectCount) & (i < 25)) {
+            let temp = objects[i];
+            if (~(temp = null)) {
+                do temp.update();
+                if (~(temp.isActive())) {
+                    do removeObject(i);
+                    if (objectCount < 0) { let objectCount = 0; }
+                } else {
+                    let i = i + 1;
+                }
+            } else {
+                let i = i + 1;
+            }
+        }
+        return;
+    }
+
+    // Checks for collisions between player and objects, handles scoring and level ups
+    method void checkCollisions() {
+        var int i;
+        var FlyingObject temp;
+        var boolean shouldLevelUp;
+        
+        if (objectCount < 0) { let objectCount = 0; }
+        if (objectCount > 25) { let objectCount = 25; }
+        
+        let i = 0;
+        let shouldLevelUp = false;
+        
+        if ((score > 0) & (score < 500)) {
+            if (Math.multiply(Math.divide(score, 10), 10) = score) {
+                let shouldLevelUp = true;
+            }
+        }
+
+        while ((i < objectCount) & (i < 25)) {
+            let temp = objects[i];
+            if (~(temp = null)) {
+                if (player.collides(temp.getX(), temp.getY(), temp.getSize())) {
+                    if (temp.isGoodObject()) {
+                        let score = score + 1;
+                        if (score > highScore) {
+                            let highScore = score;
+                        }
+                        do displayScores();
+                        do player.grow();
+                        do removeObject(i);
+
+                        if (shouldLevelUp) {
+                            let level = level + 1;
+                            if (level > 50) { let level = 50; }
+                            do increaseFlyingObjectSpeeds();
+                            do displayScores();
+                        }
+                    } else {
+                        let gameOver = true;
+                        let i = objectCount;
+                    }
+                }
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+
+    // Removes an object from the game and updates object array
+    method void removeObject(int idx) {
+        var int j;
+        var FlyingObject obj;
+        
+        if ((idx < 0) | (idx > (objectCount - 1)) | (objectCount < 1)) {
+            return;
+        }
+        
+        let obj = objects[idx];
+        if (~(obj = null)) {
+            do obj.dispose();
+        }
+        
+        let j = idx;
+        while ((j < (objectCount - 1)) & (j < 24)) {
+            if ((j > -1) & ((j + 1) < 25)) {
+                let objects[j] = objects[j + 1];
+            }
+            let j = j + 1;
+        }
+        
+        let objects[objectCount - 1] = null;
+        let objectCount = objectCount - 1;
+        if (objectCount < 0) { let objectCount = 0; }
+        return;
+    }
+
+    // Increases the speed of all active flying objects when leveling up
+    method void increaseFlyingObjectSpeeds() {
+        var int i;
+        var FlyingObject obj;
+        
+        if (objectCount < 0) { let objectCount = 0; }
+        if (objectCount > 25) { let objectCount = 25; }
+        
+        let i = 0;
+        while ((i < objectCount) & (i < 25)) {
+            let obj = objects[i];
+            if ((~(obj = null)) & obj.isActive()) {
+                if (obj.getSpeed() < 10) {  // Speed cap
+                    do obj.setSpeed(obj.getSpeed() + 1);
+                }
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+
+    // Updates the display of scores, high score, and level at the top of the screen
+    method void displayScores() {
+        do Output.moveCursor(0,0);
+        do Output.printString("                                          ");
+        do Output.moveCursor(0,0);
+        do Output.printString("Score: ");
+        do Output.printInt(score);
+        do Output.printString("  High Score: ");
+        do Output.printInt(highScore);
+        do Output.printString("  Level: ");
+        do Output.printInt(level);
+        return;
+    }
+}

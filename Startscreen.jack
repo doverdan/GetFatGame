@@ -1,0 +1,39 @@
+/** Startscreen.jack
+ *  Similar to your DinoGame snippet: shows instructions, waits for space/up/down to begin.
+ */
+class Startscreen {
+
+    /** 
+     * Displays a start screen. 
+     * Waits until user presses [space, up arrow, down arrow], then returns.
+     */
+    function void go() {
+        var boolean done;
+        var char key;
+
+        let done = false;
+
+        // Clear and print instructions
+        do Screen.clearScreen();
+        do Output.moveCursor(6, 10);
+        do Output.printString("Welcome to the GetFat game!");
+        do Output.moveCursor(7, 10);
+        do Output.printString("Use arrow keys to move, 'Q' to quit.");
+        do Output.moveCursor(8, 10);
+        do Output.printString("Collide with Circles to earn points and get fat,");
+        do Output.moveCursor(9, 10);
+        do Output.printString("Avoid the flying squares!");
+        do Output.moveCursor(10, 10);
+        do Output.printString("Press Space/Up/Down to begin!");
+
+        // Wait until user actually presses a valid key
+        while (~done) {
+            let key = Keyboard.keyPressed();
+            // Space=32, Up=131, Down=133
+            if ((key = 32) | (key = 131) | (key = 133)) {
+                let done = true;
+            }
+        }
+        return;
+    }
+}

@@ -1,0 +1,116 @@
+class PlayerCircle {
+    field int x, y;
+    field int size;
+
+    constructor PlayerCircle new(int startX, int startY, int startSize) {
+        let x = startX;
+        let y = startY;
+        let size = startSize;
+        do draw();
+        return this;
+    }
+
+    method void dispose() {
+        do erase();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void draw() {
+    var int centerX, centerY;
+    var int r;
+    
+    // Calculate radius from size
+    let r = Math.divide(size, 2);
+    if (r > 181) { 
+        let r = 181;  // respect max radius
+    }
+
+    // Calculate center point from top-left position
+
+    let centerX = x + r;  // center is radius units right from x
+    let centerY = y + r;  // center is radius units down from y
+    
+    // Only draw if center point is on screen
+    if ((centerX > 0) & (centerX < 511) & 
+        (centerY > 0) & (centerY < 255)) {
+        do Screen.setColor(true);
+        do Screen.drawCircle(centerX, centerY, r);
+    }
+    
+    return;
+}
+
+    method void erase() {
+        var int left, right, top, bottom;
+        let left = x;
+        let right = x + size;
+        let top = y;
+        let bottom = y + size;
+
+        if (left < 0) { let left = 0; }
+        if (right > 511) { let right = 511; }
+        if (top < 0) { let top = 0; }
+        if (bottom > 255) { let bottom = 255; }
+
+        if ((left < right) & (top < bottom)) {
+            do Screen.setColor(false);
+            do Screen.drawRectangle(left, top, right, bottom);
+        }
+        return;
+    }
+
+    method void moveUp() {
+        if (y > 4) {
+            do erase();
+            let y = y - 4;
+            do draw();
+        }
+        return;
+    }
+    method void moveDown() {
+        if ((y + size) < 254) {
+            do erase();
+            let y = y + 4;
+            do draw();
+        }
+        return;
+    }
+    method void moveLeft() {
+        if (x > 4) {
+            do erase();
+            let x = x - 4;
+            do draw();
+        }
+        return;
+    }
+    method void moveRight() {
+        if ((x + size) < 510) {
+            do erase();
+            let x = x + 4;
+            do draw();
+        }
+        return;
+    }
+
+    /** Grows the Circle by 2 pixels. */
+    method void grow() {
+        do erase();
+        let size = size + 2;
+        do draw();
+        return;
+    }
+
+    /** Returns true if bounding boxes overlap with (ox, oy, oSize). */
+    method boolean collides(int ox, int oy, int oSize) {
+        if ( ((x + size) > ox) & (x < (ox + oSize)) &
+             ((y + size) > oy) & (y < (oy + oSize)) ) {
+            return true;
+        }
+        return false;
+    }
+
+    method int getX() { return x; }
+    method int getY() { return y; }
+    method int getSize() { return size; }
+}

@@ -1,0 +1,40 @@
+class Endscreen {
+
+    /**
+     * showEndScreen: Wait for user to press space/up/down to replay, or 'Q' to quit.
+     * Returns true if replay, false if quit.
+     */
+    function boolean showEndScreen(int finalScore, int highScore) {
+        var boolean done;
+        var boolean replay;
+        var char key;
+
+        let done = false;
+        let replay = false;
+
+        // Display final message
+        do Screen.clearScreen();
+        do Output.moveCursor(5, 10);
+        do Output.printString("GAME OVER! Final Score: ");
+        do Output.printInt(finalScore);
+        do Output.printString("  High Score: ");
+        do Output.printInt(highScore);
+
+        do Output.moveCursor(7, 10);
+        do Output.printString("Press space to play again, or Q to quit.");
+
+        // Wait until user presses space/up/down (replay) or 'Q' (quit)
+        while (~done) {
+            let key = Keyboard.keyPressed();
+            if ((key = 32) | (key = 131) | (key = 133)) {
+                let done = true;
+                let replay = true;
+            }
+            if (key = 81) { // 'Q'
+                let done = true;
+                let replay = false;
+            }
+        }
+        return replay;
+    }
+}

@@ -1,0 +1,6 @@
+class Main {
+    function void main() {
+        do MyGame.startGame();  // Use static method
+        return;
+    }
+}

@@ -1,0 +1,27 @@
+/** Simple pseudo-random generator in Jack. */
+class Random {
+    static int seed;
+
+    function void initSeed(int s) {
+        let seed = s;
+        return;
+    }
+
+    /**
+     * returns [0..range-1]
+     * LCG: seed = seed*31 + 3, shift right 8 bits
+     */
+    function int random(int range) {
+        var int r, q, rem;
+
+        let seed = Math.multiply(seed, 31);
+        let seed = seed + 3;
+
+        let r = seed / 256; // shift
+        let q = r / range;
+        let rem = r - (Math.multiply(q, range));
+
+        if (rem < 0) { let rem = rem + range; }
+        return rem;
+    }
+}
